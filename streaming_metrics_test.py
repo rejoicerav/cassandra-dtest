@@ -1,18 +1,16 @@
 import urllib.request
-import time
 import pytest
 import logging
 
 from cassandra import ConsistencyLevel
-from tools.jmxutils import (JolokiaAgent, enable_jmx_ssl, make_mbean)
+from tools.jmxutils import (JolokiaAgent, make_mbean)
 from dtest import Tester, create_ks, create_cf
 from tools.data import insert_c1c2
 
-logger = logging.getLogger(__name__)
 
 class TestStreamingMetrics(Tester):
 
-    def test_outgoing_repair_bytes(self):
+    def test_streaming_metrics(self):
         cluster = self.cluster
 
         tokens = cluster.balanced_tokens(3)
@@ -43,22 +41,27 @@ class TestStreamingMetrics(Tester):
 
         with JolokiaAgent(nodes[0]) as jmx:
 
-            streamimng_metrics_mbean = make_mbean('metrics', type='Streaming', name = 'TotalIncomingBytes')
-            total_incoming_bytes = jmx.read_attribute(streamimng_metrics_mbean, 'Count')
+            incoming_bytes = make_mbean('metrics', type='Streaming', scope='/127.0.0.2.7000', name = 'IncomingBytes')
+            incoming_bytes_count = jmx.read_attribute(incoming_bytes, 'Count')
 
-            streamimng_metrics_mbean = make_mbean('metrics', type='Streaming', name = 'TotalOutgoingBytes')
-            total_outgoing_bytes = jmx.read_attribute(streamimng_metrics_mbean, 'Count')
+            outgoing_bytes = make_mbean('metrics', type='Streaming', scope='/127.0.0.2.7000', name = 'OutgoingBytes')
+            outgoing_bytes_count = jmx.read_attribute(outgoing_bytes, 'Count')
 
-            streamimng_metrics_mbean = make_mbean('metrics', type='Streaming', name = 'TotalOutgoingRepairBytes')
-            total_outgoing_repair_bytes = jmx.read_attribute(streamimng_metrics_mbean, 'Count')
+            total_incoming_bytes = make_mbean('metrics', type='Streaming', name = 'TotalIncomingBytes')
+            total_incoming_bytes_count = jmx.read_attribute(total_incoming_bytes, 'Count')
 
-            streamimng_metrics_mbean = make_mbean('metrics', type='Streaming', name = 'TotalOutgoingRepairSSTables')
-            total_outgoing_repair_sstables = jmx.read_attribute(streamimng_metrics_mbean, 'Count')
+            total_outgoing_bytes = make_mbean('metrics', type='Streaming', name = 'TotalOutgoingBytes')
+            total_outgoing_bytes_count = jmx.read_attribute(total_outgoing_bytes, 'Count')
 
-        assert total_incoming_bytes > 0
+            total_outgoing_repair_bytes = make_mbean('metrics', type='Streaming', name = 'TotalOutgoingRepairBytes')
+            total_outgoing_repair_bytes_count = jmx.read_attribute(total_outgoing_repair_bytes, 'Count')
 
-        assert total_outgoing_bytes > 0
+            total_outgoing_repair_sstables = make_mbean('metrics', type='Streaming', name = 'TotalOutgoingRepairSSTables')
+            total_outgoing_repair_sstables_count = jmx.read_attribute(total_outgoing_repair_sstables, 'Count')
 
-        assert total_outgoing_repair_bytes > 0
-
-        assert total_outgoing_repair_sstables > 0
+        assert incoming_bytes_count > 0
+        assert outgoing_bytes_count > 0
+        assert total_incoming_bytes_count > 0
+        assert total_outgoing_bytes_count > 0
+        assert total_outgoing_repair_bytes_count > 0
+        assert total_outgoing_repair_sstables_count > 0
