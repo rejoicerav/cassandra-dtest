@@ -2,12 +2,7 @@ import urllib.request
 import time
 import pytest
 import logging
-import glob
-import os
-import re
 
-from pathlib import Path
-from tools.misc import generate_ssl_stores
 from cassandra import ConsistencyLevel
 from tools.jmxutils import (JolokiaAgent, enable_jmx_ssl, make_mbean)
 from dtest import Tester, create_ks, create_cf
@@ -48,17 +43,17 @@ class TestStreamingMetrics(Tester):
 
         with JolokiaAgent(nodes[0]) as jmx:
 
-            active_outbound_mbean = make_mbean('metrics', type='Streaming', name = 'TotalIncomingBytes')
-            total_incoming_bytes = jmx.read_attribute(active_outbound_mbean, 'Count')
+            streamimng_metrics_mbean = make_mbean('metrics', type='Streaming', name = 'TotalIncomingBytes')
+            total_incoming_bytes = jmx.read_attribute(streamimng_metrics_mbean, 'Count')
 
-            active_outbound_mbean = make_mbean('metrics', type='Streaming', name = 'TotalOutgoingBytes')
-            total_outgoing_bytes = jmx.read_attribute(active_outbound_mbean, 'Count')
+            streamimng_metrics_mbean = make_mbean('metrics', type='Streaming', name = 'TotalOutgoingBytes')
+            total_outgoing_bytes = jmx.read_attribute(streamimng_metrics_mbean, 'Count')
 
-            active_outbound_mbean = make_mbean('metrics', type='Streaming', name = 'TotalOutgoingRepairBytes')
-            total_outgoing_repair_bytes = jmx.read_attribute(active_outbound_mbean, 'Count')
+            streamimng_metrics_mbean = make_mbean('metrics', type='Streaming', name = 'TotalOutgoingRepairBytes')
+            total_outgoing_repair_bytes = jmx.read_attribute(streamimng_metrics_mbean, 'Count')
 
-            active_outbound_mbean = make_mbean('metrics', type='Streaming', name = 'TotalOutgoingRepairSSTables')
-            total_outgoing_repair_sstables = jmx.read_attribute(active_outbound_mbean, 'Count')
+            streamimng_metrics_mbean = make_mbean('metrics', type='Streaming', name = 'TotalOutgoingRepairSSTables')
+            total_outgoing_repair_sstables = jmx.read_attribute(streamimng_metrics_mbean, 'Count')
 
         assert total_incoming_bytes > 0
 
