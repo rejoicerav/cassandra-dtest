@@ -5,6 +5,7 @@ from cassandra import ConsistencyLevel
 from cassandra.query import SimpleStatement
 
 from dtest import Tester
+from tools.jmxutils import make_mbean, JolokiaAgent
 
 since = pytest.mark.since
 
@@ -61,10 +62,12 @@ class TestPreviewRepair(Tester):
         result = node1.repair(options=['ks', '--preview'])
         assert "Total estimated streaming" in result.stdout
         assert "Previewed data was in sync" not in result.stdout
+        assert preivew_failure_count(node1) == 1
 
         result = node1.repair(options=['ks', '--preview', '--full'])
         assert "Total estimated streaming" in result.stdout
         assert "Previewed data was in sync" not in result.stdout
+        assert preivew_failure_count(node1) == 2
 
         # repaired data should be in sync anyway
         result = node1.repair(options=['ks', '--validate'])
@@ -80,9 +83,18 @@ class TestPreviewRepair(Tester):
         # ...and everything should be in sync
         result = node1.repair(options=['ks', '--preview'])
         assert "Previewed data was in sync" in result.stdout
+        # data is repaird, previewFailure metric should remain same
+        assert preivew_failure_count(node1) == 2
 
         result = node1.repair(options=['ks', '--preview', '--full'])
         assert "Previewed data was in sync" in result.stdout
+        assert preivew_failure_count(node1) == 2
 
         result = node1.repair(options=['ks', '--validate'])
         assert "Repaired data is in sync" in result.stdout
+
+
+def preivew_failure_count(node):
+    preview_failure_size_mbean = make_mbean('metrics', type='Repair', name='PreviewFailures')
+    with JolokiaAgent(node) as jmx:
+        return jmx.read_attribute(preview_failure_size_mbean, 'Count')
